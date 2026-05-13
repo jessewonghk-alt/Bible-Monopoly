@@ -1,0 +1,529 @@
+import React, { useState, useEffect, useRef } from 'react';
+
+const Icons = {
+  Trophy: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>,
+  Scroll: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 17V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2Z"/><path d="M15 21v-4a2 2 0 0 1 2-2h2"/><path d="M5 17a2 2 0 0 1 2-2h2"/><path d="M9 3v14"/></svg>,
+  BookOpen: ({ className }) => <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>,
+  MapPin: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>,
+  Coins: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18.06"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg>,
+  RotateCcw: ({ className }) => <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>,
+  User: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+  Users: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+  ChevronRight: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>,
+  Info: () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>,
+  CheckCircle: () => <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
+  XCircle: () => <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>,
+  Clock: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+};
+
+const BIBLE_QUESTIONS = [
+  { q: "上帝用什麼造了第一個男人亞當？", a: ["塵土", "石頭", "木頭"], c: 0 },
+  { q: "上帝在第幾天創造了人類？", a: ["第五天", "第六天", "第七天"], c: 1 },
+  { q: "挪亞方舟停在什麼山上？", a: ["西奈山", "亞拉臘山", "橄欖山"], c: 1 },
+  { q: "上帝與挪亞立約的記號是什麼？", a: ["彩虹", "鴿子", "雲彩"], c: 0 },
+  { q: "亞伯拉罕多少歲時生了以撒？", a: ["80歲", "90歲", "100歲"], c: 2 },
+  { q: "誰被哥哥們賣到埃及，後來成為宰相？", a: ["約瑟", "便雅憫", "流便"], c: 0 },
+  { q: "摩西在什麼植物的火焰中看見上帝？", a: ["橡樹", "荊棘", "棕樹"], c: 1 },
+  { q: "上帝降下多少個災難才讓法老容以色列人走？", a: ["七災", "十災", "十二災"], c: 1 },
+  { q: "以色列人過紅海後，婦女領袖米利暗拿什麼慶祝？", a: ["琴", "鼓", "鈴"], c: 1 },
+  { q: "上帝在曠野降下什麼像珍珠的食物給以色列人？", a: ["瑪納", "鵪鶉", "無花果"], c: 0 },
+  { q: "十誡是在哪一座山頒布的？", a: ["西奈山", "迦密山", "黑門山"], c: 0 },
+  { q: "誰接續摩西帶領以色列人進入迦南？", a: ["迦勒", "約書亞", "基甸"], c: 1 },
+  { q: "大衛用什麼擊敗了巨人歌利亞？", a: ["長矛", "甩石的機弦", "大刀"], c: 1 },
+  { q: "誰是聖經中最有智慧的國王？", a: ["掃羅", "所羅門", "希西家"], c: 1 },
+  { q: "被大魚吞進肚子三天三夜的先知是誰？", a: ["以利亞", "約拿", "但以理"], c: 1 },
+  { q: "耶穌在哪一個城出生？", a: ["拿撒勒", "耶路撒冷", "伯利恆"], c: 2 },
+  { q: "耶穌在世上的職業是什麼？", a: ["漁夫", "木匠", "稅吏"], c: 1 },
+  { q: "耶穌呼召的第一批門徒大多是什麼職業？", a: ["漁夫", "農夫", "牧羊人"], c: 0 },
+  { q: "耶穌用多少餅和魚餵飽五千人？", a: ["五餅二魚", "七餅二魚", "十餅二魚"], c: 0 },
+  { q: "耶穌在哪一條河受洗？", a: ["尼羅河", "約旦河", "幼發拉底河"], c: 1 },
+  { q: "誰在夜裡去見耶穌討論重生？", a: ["尼哥底母", "撒該", "拉撒路"], c: 0 },
+  { q: "耶穌讓誰死後四天復活？", a: ["睚魯的女兒", "拉撒路", "多加"], c: 1 },
+  { q: "猶大為了多少塊銀錢出賣耶穌？", a: ["二十塊", "三十塊", "五十塊"], c: 1 },
+  { q: "耶穌死後第幾天復活？", a: ["第二天", "第三天", "第七天"], c: 1 },
+  { q: "耶穌升天前吩咐門徒要去傳福音給誰聽？", a: ["猶太人", "萬民", "羅馬人"], c: 1 },
+  { q: "在前往哪裡的路上，掃羅看見大光悔改？", a: ["大馬士革", "安提阿", "以弗所"], c: 0 },
+  { q: "聖靈初熟的果子中，第一種是什麼？", a: ["喜樂", "仁愛", "和平"], c: 1 },
+  { q: "主禱文中，我們求上帝賜下什麼飲食？", a: ["豐盛的", "今日的", "美味的"], c: 1 },
+  { q: "聖經最後一卷書叫什麼名字？", a: ["猶大書", "希伯來書", "啟示錄"], c: 2 },
+  { q: "上帝的律法總綱就是：愛主你的神以及？", a: ["守安息日", "愛人如己", "常常禱告"], c: 1 },
+  { q: "上帝造女人的時候，用了亞當身上哪一部分？", a: ["頭髮", "肋骨", "腳趾"], c: 1 },
+  { q: "該隱與亞伯，誰是種地的，誰是牧羊的？", a: ["該隱牧羊，亞伯種地", "該隱種地，亞伯牧羊", "兩位都是種地"], c: 1 },
+  { q: "誰在年老時，上帝應許他的後裔要多如天上的星？", a: ["羅得", "亞伯拉罕", "以撒"], c: 1 },
+  { q: "以撒的雙胞胎兒子是誰？", a: ["約瑟與便雅憫", "以掃與雅各", "瑪拿西與以法蓮"], c: 1 },
+  { q: "雅各在夢中看見什麼連接天地，有使者上去下來？", a: ["梯子", "繩子", "大山"], c: 0 },
+  { q: "約瑟的爸爸給了他一件什麼樣的衣服，引發哥哥嫉妒？", a: ["金袍", "彩衣", "盔甲"], c: 1 },
+  { q: "摩西出生後，媽媽把他放在什麼裡面躲避法老？", a: ["木箱", "蒲草箱", "竹籃"], c: 1 },
+  { q: "上帝引領以色列人出埃及時，日間用什麼領路？", a: ["雲柱", "火柱", "雷電"], c: 0 },
+  { q: "上帝領以色列人出埃及時，夜間用什麼領路？", a: ["雲柱", "火柱", "大星"], c: 1 },
+  { q: "以色列人在曠野想要吃肉，上帝降下什麼鳥類？", a: ["鴿子", "鵪鶉", "鷹"], c: 1 },
+  { q: "誰是聖經中力氣最大，曾用驢腮骨擊殺千人的士師？", a: ["基甸", "耶弗他", "參孫"], c: 2 },
+  { q: "拿俄米的兒媳，對婆婆說「你的國就是我的國」的是誰？", a: ["路得", "俄珥巴", "哈拿"], c: 0 },
+  { q: "撒母耳小時候在誰的面前服事上帝？", a: ["掃羅", "以利", "大衛"], c: 1 },
+  { q: "上帝揀選誰成為以色列的第一位國王？", a: ["大衛", "撒母耳", "掃羅"], c: 2 },
+  { q: "大衛在成為國王前，主要的工作是什麼？", a: ["木匠", "牧羊", "漁夫"], c: 1 },
+  { q: "大衛與誰是生死之交的好友，他是掃羅的兒子？", a: ["約拿單", "押沙龍", "所羅門"], c: 0 },
+  { q: "哪位先知曾與巴力的先知在迦密山比試，降下火來？", a: ["以利沙", "以利亞", "以賽亞"], c: 1 },
+  { q: "但以理的三個朋友被扔進什麼地方卻沒有受傷？", a: ["獅子坑", "烈火的窯", "監獄"], c: 1 },
+  { q: "但以理因為堅持向神禱告，被扔進了什麼地方？", a: ["火爐", "獅子坑", "深坑"], c: 1 },
+  { q: "誰是耶穌的母親？", a: ["馬利亞", "以利沙伯", "馬大"], c: 0 },
+  { q: "耶穌十二歲時，父母在什麼地方找到了他？", a: ["學校", "聖殿", "花園"], c: 1 },
+  { q: "在曠野為耶穌預備道路，給人施洗的是誰？", a: ["施洗約翰", "使徒約翰", "彼得"], c: 0 },
+  { q: "耶穌在曠野受試探時，一共勝過了幾次魔鬼的試探？", a: ["一次", "二次", "三次"], c: 2 },
+  { q: "耶穌說：我是道路、真理、還有什麼？", a: ["亮光", "生命", "力量"], c: 1 },
+  { q: "彼得在雞叫以先，曾幾次不認耶穌？", a: ["一次", "兩次", "三次"], c: 2 },
+  { q: "耶穌讓哪位稅吏爬下桑樹，並去他家居住？", a: ["撒該", "馬太", "猶大"], c: 0 },
+  { q: "浪子回頭的故事中，父親看見回來的兒子做了什麼？", a: ["責備他", "趕走他", "跑去擁抱他"], c: 2 },
+  { q: "耶穌說：你們若有信心像一粒什麼，就能移山？", a: ["麥子", "芥菜種", "沙粒"], c: 1 },
+  { q: "哪位門徒在耶穌復活後，說要摸過耶穌釘痕才信？", a: ["多馬", "雅各", "彼得"], c: 0 },
+  { q: "五旬節聖靈降臨時，門徒頭上有什麼像舌頭降下？", a: ["雲彩", "火焰", "鴿子"], c: 1 },
+  { q: "聖經中說：要常常喜樂，還要什麼？", a: ["不住的禱告", "拼命工作", "大聲唱歌"], c: 0 },
+  { q: "誰在美門口叫一個生來瘸腿的人起來行走？", a: ["保羅", "彼得", "巴拿巴"], c: 1 },
+  { q: "「愛的真諦」這段經文記載在聖經哪一卷書？", a: ["羅馬書", "哥林多前書", "以弗所書"], c: 1 },
+  { q: "保羅與誰在監獄裡唱歌讚美神，地大震動門就開了？", a: ["巴拿巴", "西拉", "提摩太"], c: 1 },
+  { q: "提摩太的信仰是受誰的影響？", a: ["外祖母與母親", "他的哥哥", "羅馬官員"], c: 0 },
+  { q: "聖經說：神愛世人，甚至將祂的什麼賜給他們？", a: ["天軍", "獨生子", "所有金銀"], c: 1 },
+  { q: "挪亞的孩子有幾個？", a: ["兩個", "三個", "四個"], c: 1 },
+  { q: "神在西奈山呼喚摩西時，摩西為何要脫鞋？", a: ["鞋壞了", "因為那是聖地", "習俗如此"], c: 1 },
+  { q: "以色列人圍繞耶利哥城幾天，城牆才倒塌？", a: ["三天", "七天", "十天"], c: 1 },
+  { q: "基甸帶領多少人擊敗了米甸的大軍？", a: ["300人", "3000人", "30000人"], c: 0 },
+  { q: "「耶和華是我的牧者」是誰寫的詩篇？", a: ["所羅門", "大衛", "摩西"], c: 1 },
+  { q: "被稱為「信心之父」的是誰？", a: ["亞伯拉罕", "以撒", "亞當"], c: 0 },
+  { q: "神應許給以色列民的地，被稱為流什麼與蜜之地？", a: ["水", "奶", "酒"], c: 1 },
+  { q: "耶穌說：你們要做地上的鹽，還要做法什麼？", a: ["世上的光", "世上的糖", "世上的金"], c: 0 },
+  { q: "耶穌教導門徒禱告的內容被稱為什麼？", a: ["使徒信經", "主禱文", "十誡"], c: 1 },
+  { q: "哪一卷福音書不是四本福音書之一？", a: ["馬可福音", "約翰福音", "羅馬書"], c: 2 },
+  { q: "保羅原來的名字叫什麼？", a: ["掃羅", "西門", "猶大"], c: 0 },
+  { q: "最後晚餐中，耶穌用什麼代表祂的身體？", a: ["葡萄汁", "餅", "羊肉"], c: 1 },
+  { q: "神賜給摩西兩塊石版，上面寫著什麼？", a: ["地圖", "十誡", "族譜"], c: 1 },
+  { q: "耶穌在水面上行走時，哪位門徒也嘗試走過去？", a: ["彼得", "安得烈", "約翰"], c: 0 },
+  { q: "誰被扔進獅子坑卻毫髮無傷？", a: ["但以理", "以賽亞", "約瑟"], c: 0 },
+  { q: "聖靈的果子一共有幾種表現？", a: ["七種", "八種", "九種"], c: 2 },
+  { q: "耶穌降生時，是誰引導東方博士找到耶穌？", a: ["大星", "地圖", "駱駝"], c: 0 },
+  { q: "誰是信心之母，在九十歲時生下以撒？", a: ["利百加", "拉結", "撒拉"], c: 2 },
+  { q: "上帝六日創造萬物，第七日做什麼？", a: ["繼續創造", "安息", "巡視"], c: 1 },
+  { q: "耶穌醫治了幾個長大痲瘋的，卻只有一個回來感恩？", a: ["五個", "十個", "十二個"], c: 1 },
+  { q: "摩西帶領以色列人離開埃及，法老在哪裡追趕他們？", a: ["死海", "紅海", "約旦河"], c: 1 },
+  { q: "聖經中壽命最長的人是誰？", a: ["瑪土撒拉", "亞當", "挪亞"], c: 0 },
+  { q: "撒母耳的母親哈拿向神求子，後來生下了誰？", a: ["掃羅", "撒母耳", "約拿單"], c: 1 },
+  { q: "雅各的十二個兒子後來成為了什麼？", a: ["埃及的官員", "十二個支派", "漁夫"], c: 1 },
+  { q: "耶穌在迦拿的婚宴上行了什麼神蹟？", a: ["五餅二魚", "變水為酒", "叫死人復活"], c: 1 },
+  { q: "使徒保羅向誰傳福音，被稱為外邦人的使徒？", a: ["外邦人", "只有猶太人", "天使"], c: 0 },
+  { q: "耶穌復活後，向門徒顯現了多少天後升天？", a: ["七天", "三十天", "四十天"], c: 2 },
+  { q: "馬太福音記載：凡勞苦擔重擔的人可以到誰那裡？", a: ["老師", "耶穌", "政府"], c: 1 },
+  { q: "誰預言耶穌將會出生，被稱為大先知？", a: ["以賽亞", "撒母耳", "約書亞"], c: 0 },
+  { q: "耶穌復活的第一個主日，婦女們去墳墓要做什麼？", a: ["探親", "抹香料", "禱告"], c: 1 },
+  { q: "聖經說：上帝就是什麼？", a: ["光", "愛", "以上皆是"], c: 2 },
+  { q: "誰是馬大的妹妺，坐在耶穌腳前聽道？", a: ["馬利亞", "多加", "百基拉"], c: 0 },
+  { q: "約書亞帶領以色列人繞耶利哥城，最後一天繞幾次？", a: ["一次", "三次", "七次"], c: 2 },
+  { q: "耶穌在哪座山上受難被釘十字架？", a: ["橄欖山", "各各他", "西奈山"], c: 1 }
+];
+
+const App = () => {
+  const [gameState, setGameState] = useState('setup'); 
+  const [playerCount, setPlayerCount] = useState(2);
+  const [players, setPlayers] = useState([]);
+  const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
+  const [diceResult, setDiceResult] = useState(0);
+  const [rolling, setRolling] = useState(false);
+  const [gameLog, setGameLog] = useState(["歡迎來到聖經大富翁！請開始旅程。"]);
+  const [winner, setWinner] = useState(null);
+
+  // Question State
+  const [showQuestion, setShowQuestion] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(10);
+  const [answered, setAnswered] = useState(false);
+  const [isCorrect, setIsCorrect] = useState(null);
+  const [hasAttemptedPurchase, setHasAttemptedPurchase] = useState(false);
+  const timerRef = useRef(null);
+
+  const boardTiles = [
+    { name: "恩典起點", type: "start", color: "bg-yellow-200" },
+    { name: "伊甸園", type: "property", price: 60, rent: 10, color: "bg-emerald-700", text: "white" },
+    { name: "祝福卡", type: "chance", color: "bg-blue-100" },
+    { name: "亞拉臘山", type: "property", price: 80, rent: 20, color: "bg-emerald-700", text: "white" },
+    { name: "什一奉獻", type: "tax", price: 150, color: "bg-gray-200" },
+    { name: "吾珥", type: "property", price: 100, rent: 30, color: "bg-sky-500", text: "white" },
+    { name: "曠野磨練", type: "jail", color: "bg-stone-500", text: "white" },
+    { name: "別是巴", type: "property", price: 120, rent: 40, color: "bg-sky-500", text: "white" },
+    { name: "試煉卡", type: "chance", color: "bg-orange-100" },
+    { name: "歌珊地", type: "property", price: 140, rent: 50, color: "bg-purple-500", text: "white" },
+    { name: "活水泉源", type: "utility", price: 150, rent: 60, color: "bg-cyan-400" },
+    { name: "西奈山", type: "property", price: 160, rent: 70, color: "bg-purple-500", text: "white" },
+    { name: "安息日", type: "parking", color: "bg-green-200" },
+    { name: "耶利哥", type: "property", price: 180, rent: 80, color: "bg-orange-500", text: "white" },
+    { name: "祝福卡", type: "chance", color: "bg-blue-100" },
+    { name: "撒馬利亞", type: "property", price: 200, rent: 90, color: "bg-orange-500", text: "white" },
+    { name: "聖殿燈台", type: "utility", price: 150, rent: 60, color: "bg-yellow-400" },
+    { name: "拿撒勒", type: "property", price: 220, rent: 100, color: "bg-red-500", text: "white" },
+    { name: "前往磨練", type: "go_to_jail", color: "bg-red-900", text: "white" },
+    { name: "伯利恆", type: "property", price: 240, rent: 110, color: "bg-red-500", text: "white" },
+    { name: "試煉卡", type: "chance", color: "bg-orange-100" },
+    { name: "耶路撒冷", type: "property", price: 300, rent: 150, color: "bg-indigo-600", text: "white" },
+    { name: "聖殿稅", type: "tax", price: 200, color: "bg-gray-200" },
+    { name: "新耶路撒冷", type: "property", price: 400, rent: 250, color: "bg-indigo-900", text: "white" },
+  ];
+
+  const playerColors = [
+    { name: "紅色", bg: "bg-red-500" },
+    { name: "藍色", bg: "bg-blue-500" },
+    { name: "綠色", bg: "bg-green-600" },
+    { name: "紫色", bg: "bg-purple-600" },
+  ];
+
+  const getGridStyle = (index) => {
+    let row, col;
+    if (index >= 0 && index <= 6) { row = 6; col = 6 - index; }
+    else if (index >= 7 && index <= 11) { row = 12 - index; col = 0; }
+    else if (index >= 12 && index <= 18) { row = 0; col = index - 12; }
+    else { row = index - 18; col = 6; }
+    return { gridRow: row + 1, gridColumn: col + 1 };
+  };
+
+  const startGame = () => {
+    const initialPlayers = Array.from({ length: playerCount }, (_, i) => ({
+      id: i,
+      name: `玩家 ${i + 1}`,
+      color: playerColors[i],
+      position: 0,
+      money: 1500,
+      inventory: [],
+      isBankrupt: false
+    }));
+    setPlayers(initialPlayers);
+    setCurrentPlayerIndex(0);
+    setGameState('playing');
+  };
+
+  const addLog = (msg) => {
+    setGameLog(prev => [msg, ...prev].slice(0, 6));
+  };
+
+  const rollDice = () => {
+    if (rolling || players[currentPlayerIndex].isBankrupt) return;
+    setRolling(true);
+    setHasAttemptedPurchase(false);
+    
+    // Dice animation interval
+    let rollInterval = setInterval(() => {
+      setDiceResult(Math.floor(Math.random() * 6) + 1);
+    }, 80);
+
+    setTimeout(() => {
+      clearInterval(rollInterval);
+      const finalRoll = Math.floor(Math.random() * 6) + 1;
+      setDiceResult(finalRoll);
+      movePlayer(finalRoll);
+      setRolling(false);
+    }, 800);
+  };
+
+  const movePlayer = (steps) => {
+    setPlayers(prevPlayers => {
+      const newPlayers = [...prevPlayers];
+      const p = newPlayers[currentPlayerIndex];
+      let newPos = (p.position + steps);
+      if (newPos >= boardTiles.length) {
+        newPos %= boardTiles.length;
+        p.money += 200;
+        addLog(`${p.name} 經過起點，領受 200 恩典。`);
+      }
+      p.position = newPos;
+      handleTileEffect(p, newPlayers);
+      return newPlayers;
+    });
+  };
+
+  const handleTileEffect = (player, allPlayers) => {
+    const tile = boardTiles[player.position];
+    if (tile.type === "tax") {
+      player.money -= tile.price;
+      addLog(`${player.name} 在 ${tile.name} 繳納了 ${tile.price}。`);
+    } else if (tile.type === "chance") {
+      const win = Math.random() > 0.5;
+      const val = 100;
+      if (win) { player.money += val; addLog(`${player.name} 獲得祝福：+${val} 他連得。`); }
+      else { player.money -= val; addLog(`${player.name} 遭遇試煉：-${val} 他連得。`); }
+    } else if (tile.type === "go_to_jail") {
+      player.position = 6;
+      addLog(`${player.name} 被送往曠野受磨練！`);
+    } else if (tile.type === "property" || tile.type === "utility") {
+      const owner = allPlayers.find(o => o.inventory.includes(player.position));
+      if (owner && owner.id !== player.id) {
+        player.money -= tile.rent;
+        owner.money += tile.rent;
+        addLog(`${player.name} 支付租金 ${tile.rent} 給 ${owner.name}。`);
+      }
+    }
+    checkStatus(player, allPlayers);
+  };
+
+  const checkStatus = (player, allPlayers) => {
+    if (player.money < 0) {
+      player.isBankrupt = true;
+      addLog(`${player.name} 遺憾破產了。`);
+      const active = allPlayers.filter(p => !p.isBankrupt);
+      if (active.length === 1) { setWinner(active[0]); setGameState('winner'); }
+    }
+  };
+
+  useEffect(() => {
+    if (showQuestion && timeLeft > 0 && !answered) {
+      timerRef.current = setTimeout(() => {
+        setTimeLeft(timeLeft - 1);
+      }, 1000);
+    } else if (timeLeft === 0 && !answered) {
+      handleAnswer(-1); // 超時
+    }
+    return () => clearTimeout(timerRef.current);
+  }, [showQuestion, timeLeft, answered]);
+
+  const startQuestion = () => {
+    const randomIdx = Math.floor(Math.random() * BIBLE_QUESTIONS.length);
+    setCurrentQuestion(BIBLE_QUESTIONS[randomIdx]);
+    setTimeLeft(10);
+    setAnswered(false);
+    setIsCorrect(null);
+    setShowQuestion(true);
+    setHasAttemptedPurchase(true);
+  };
+
+  const handleAnswer = (choiceIdx) => {
+    if (answered) return;
+    setAnswered(true);
+    clearTimeout(timerRef.current);
+    
+    const correct = choiceIdx === currentQuestion.c;
+    setIsCorrect(correct);
+    
+    if (correct) {
+      addLog(`${players[currentPlayerIndex].name} 答題正確！獲得購買資格。`);
+      buyProperty();
+    } else {
+      const msg = choiceIdx === -1 ? "時間到！" : "回答錯誤！";
+      addLog(`${players[currentPlayerIndex].name} ${msg} 失去購買機會。`);
+    }
+
+    setTimeout(() => {
+      setShowQuestion(false);
+    }, 2000);
+  };
+
+  const buyProperty = () => {
+    const p = players[currentPlayerIndex];
+    const tile = boardTiles[p.position];
+    setPlayers(prev => {
+      const n = [...prev];
+      n[currentPlayerIndex].money -= tile.price;
+      n[currentPlayerIndex].inventory.push(p.position);
+      return n;
+    });
+    addLog(`${p.name} 獲得了 ${tile.name} 的管家權。`);
+  };
+
+  const nextTurn = () => {
+    let next = (currentPlayerIndex + 1) % players.length;
+    while (players[next].isBankrupt) next = (next + 1) % players.length;
+    setCurrentPlayerIndex(next);
+    setDiceResult(0);
+    setHasAttemptedPurchase(false);
+  };
+
+  const DiceFace = ({ value }) => {
+    const dots = {
+      1: [4],
+      2: [0, 8],
+      3: [0, 4, 8],
+      4: [0, 2, 6, 8],
+      5: [0, 2, 4, 6, 8],
+      6: [0, 2, 3, 5, 6, 8]
+    };
+    return (
+      <div className="w-16 h-16 bg-white rounded-xl shadow-lg border-2 border-stone-100 grid grid-cols-3 grid-rows-3 p-2 gap-1">
+        {[...Array(9)].map((_, i) => (
+          <div key={i} className={`flex items-center justify-center`}>
+            {dots[value]?.includes(i) && <div className="w-3 h-3 bg-stone-800 rounded-full" />}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  if (gameState === 'setup') {
+    return (
+      <div className="min-h-screen bg-stone-100 flex items-center justify-center p-4 text-stone-800">
+        <div className="bg-white p-10 rounded-[3rem] shadow-2xl max-w-md w-full text-center border border-stone-200">
+          <Icons.BookOpen className="mx-auto text-amber-600 mb-6 w-16 h-16" />
+          <h1 className="text-4xl font-black mb-2 tracking-tight">聖經大富翁</h1>
+          <p className="text-stone-500 mb-10">信心與管家的應許之旅</p>
+          <div className="flex justify-center gap-4 mb-10">
+            {[2, 3, 4].map(n => (
+              <button key={n} onClick={() => setPlayerCount(n)} className={`w-14 h-14 rounded-2xl font-bold transition-all ${playerCount === n ? 'bg-amber-600 text-white scale-110 shadow-lg' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'}`}>{n}</button>
+            ))}
+          </div>
+          <button onClick={startGame} className="w-full py-4 bg-stone-900 text-white rounded-2xl font-bold hover:bg-stone-800 flex items-center justify-center gap-2">開始旅程 <Icons.ChevronRight /></button>
+        </div>
+      </div>
+    );
+  }
+
+  if (gameState === 'winner') {
+    return (
+      <div className="min-h-screen bg-amber-50 flex items-center justify-center p-6 text-stone-800">
+        <div className="bg-white p-12 rounded-[3rem] shadow-2xl text-center border-b-8 border-amber-500">
+          <Icons.Trophy />
+          <h2 className="text-3xl font-bold mb-2">最終的贏家</h2>
+          <p className="text-xl text-amber-700 font-bold mb-8 uppercase tracking-widest">{winner?.name}</p>
+          <button onClick={() => setGameState('setup')} className="px-10 py-3 bg-stone-900 text-white rounded-xl shadow-lg">重新開始</button>
+        </div>
+      </div>
+    );
+  }
+
+  const curr = players[currentPlayerIndex];
+
+  return (
+    <div className="min-h-screen bg-[#f4f1ea] p-4 flex flex-col items-center justify-center font-sans overflow-hidden text-stone-800">
+      
+      {/* HUD Header */}
+      <div className="w-full max-w-5xl flex justify-between items-center mb-4 bg-white/70 backdrop-blur-md p-3 rounded-2xl border border-stone-200 shadow-sm z-50">
+        <div className="flex gap-4">
+          {players.map((p, i) => (
+            <div key={i} className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border-2 transition-all ${p.isBankrupt ? 'opacity-30 grayscale' : i === currentPlayerIndex ? 'border-amber-500 bg-amber-50' : 'border-transparent'}`}>
+              <div className={`w-3 h-3 rounded-full ${p.color.bg}`} />
+              <div>
+                <span className="text-[10px] font-bold block leading-none">{p.name}</span>
+                <span className="text-xs font-mono text-stone-600">${p.money}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="text-stone-400 text-[10px] font-bold uppercase tracking-widest px-4 border-l border-stone-200">
+          Divine Stewardship v1.5
+        </div>
+      </div>
+
+      <div className="relative bg-stone-800 p-2 rounded-xl shadow-2xl border-4 border-stone-900">
+        <div className="grid grid-cols-7 grid-rows-7 gap-1 bg-stone-300 w-[92vw] h-[92vw] max-w-[700px] max-h-[700px]">
+          
+          {boardTiles.map((tile, i) => (
+            <div key={i} style={getGridStyle(i)} className={`relative border border-stone-400 flex flex-col items-center justify-between p-1.5 ${tile.color} ${tile.text === 'white' ? 'text-white' : 'text-stone-800'}`}>
+              <span className="text-[8px] sm:text-[10px] font-bold text-center leading-tight uppercase mt-1 z-10">{tile.name}</span>
+              <div className="flex flex-wrap justify-center gap-1 my-1 min-h-[20px] z-20">
+                {players.map(p => !p.isBankrupt && p.position === i && (
+                  <div key={p.id} className={`w-4 h-4 sm:w-6 sm:h-6 rounded-full ${p.color.bg} border-2 border-white shadow-md animate-bounce`} />
+                ))}
+              </div>
+              <div className="w-full flex flex-col items-center z-10">
+                {tile.price && <span className="text-[7px] sm:text-[9px] font-bold opacity-70">${tile.price}</span>}
+                {players.find(p => p.inventory.includes(i)) && <div className={`h-1.5 sm:h-2 w-full ${players.find(p => p.inventory.includes(i)).color.bg} mt-1`} />}
+              </div>
+            </div>
+          ))}
+
+          {/* Central Area View... */}
+          <div className="col-start-2 col-end-7 row-start-2 row-end-7 bg-white m-1 rounded-lg flex flex-col shadow-inner border-2 border-stone-50 overflow-hidden z-40 relative">
+            
+            {showQuestion ? (
+              <div className="absolute inset-0 bg-white z-50 flex flex-col p-6 animate-in fade-in zoom-in duration-300">
+                <div className="flex justify-between items-center mb-4">
+                  <div className="flex items-center gap-2 text-amber-600 font-black tracking-widest uppercase text-xs">
+                    <Icons.Clock /> 剩餘時間: {timeLeft}s
+                  </div>
+                  <div className="text-stone-400 text-xs font-bold">真理測試</div>
+                </div>
+                
+                {/* Timer Bar */}
+                <div className="w-full h-2 bg-stone-100 rounded-full mb-6 overflow-hidden">
+                  <div 
+                    className={`h-full transition-all duration-1000 ${timeLeft < 4 ? 'bg-red-500 animate-pulse' : 'bg-amber-500'}`}
+                    style={{ width: `${(timeLeft / 10) * 100}%` }}
+                  ></div>
+                </div>
+
+                <div className="flex-1 flex flex-col justify-center">
+                  <h3 className="text-xl font-bold text-stone-800 mb-8 leading-relaxed">
+                    {currentQuestion.q}
+                  </h3>
+                  
+                  <div className="space-y-3">
+                    {currentQuestion.a.map((ans, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handleAnswer(idx)}
+                        disabled={answered}
+                        className={`w-full p-4 rounded-2xl border-2 font-bold text-left transition-all flex justify-between items-center
+                          ${answered 
+                            ? (idx === currentQuestion.c ? 'bg-emerald-50 border-emerald-500 text-emerald-700' : (idx === isCorrect ? '' : 'bg-stone-50 border-stone-100 text-stone-300'))
+                            : 'border-stone-100 hover:border-amber-400 hover:bg-amber-50 active:scale-[0.98]'
+                          }`}
+                      >
+                        {ans}
+                        {answered && idx === currentQuestion.c && <Icons.CheckCircle />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {answered && (
+                  <div className="mt-4 animate-in slide-in-from-bottom-4 duration-300 flex justify-center">
+                    {isCorrect ? <div className="text-emerald-600 font-black text-2xl">正確！恭喜獲得</div> : <div className="text-red-600 font-black text-2xl">不正確！繼續努力</div>}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                <div className="flex-1 flex flex-col items-center justify-center p-4 border-b border-stone-100">
+                  <Icons.BookOpen className="text-amber-200 mb-2 w-10 h-10" />
+                  <h2 className="text-xl font-black text-stone-300 tracking-widest italic">BIBLE MONOPOLY</h2>
+                  {diceResult > 0 && <div className="mt-4 animate-in zoom-in"><DiceFace value={diceResult} /></div>}
+                </div>
+
+                <div className="flex-1 flex flex-col justify-center gap-4 p-4">
+                  <div className="text-center px-2">
+                    <p className="text-[10px] text-stone-400 font-bold uppercase mb-1">當前回合：{curr.name}</p>
+                    <p className="text-stone-800 font-bold text-sm leading-tight h-10 flex items-center justify-center">{gameLog[0]}</p>
+                  </div>
+
+                  <div className="flex justify-center gap-3">
+                    {diceResult === 0 ? (
+                      <button onClick={rollDice} disabled={rolling} className="bg-stone-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-stone-800 shadow-md active:scale-95 transition-all flex items-center gap-2">
+                        <Icons.RotateCcw className={rolling ? 'animate-spin' : ''} /> {rolling ? '祈禱中...' : '擲骰移動'}
+                      </button>
+                    ) : (
+                      <div className="flex gap-2">
+                        {(boardTiles[curr.position].type === 'property' || boardTiles[curr.position].type === 'utility') && !players.some(o => o.inventory.includes(curr.position)) && !hasAttemptedPurchase && (
+                           <button onClick={startQuestion} className="bg-amber-600 text-white px-6 py-3 rounded-xl font-bold shadow-md hover:bg-amber-700 active:scale-95 transition-all flex items-center gap-2">
+                              <Icons.MapPin /> 回答題目
+                           </button>
+                        )}
+                        <button onClick={nextTurn} className="bg-stone-100 text-stone-800 px-6 py-3 rounded-xl font-bold hover:bg-stone-200 flex items-center gap-2">
+                          結束回合 <Icons.ChevronRight />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {}
+      <div className="mt-6 flex flex-col items-center gap-3">
+        <div className="flex gap-2">
+           {gameLog.slice(1, 3).map((log, i) => (
+             <div key={i} className="text-[9px] text-stone-400 bg-white/50 px-3 py-1 rounded-full border border-stone-200">{log}</div>
+           ))}
+        </div>
+        <div className="text-stone-500 text-[10px] font-bold flex items-center gap-2">
+          <Icons.Info /> 「萬民都要因你得福」— 創世記 12:3
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default App;
